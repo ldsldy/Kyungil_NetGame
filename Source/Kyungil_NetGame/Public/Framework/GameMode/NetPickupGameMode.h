@@ -14,4 +14,16 @@ class KYUNGIL_NETGAME_API ANetPickupGameMode : public ANetGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+    UFUNCTION(BlueprintCallable, Category = "GameMode")
+    void DetermineGameWinner();
+
+protected:
+    virtual void InitGameState() override;
+
+protected:
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameMode")
+    float GameDuration = 60.f; // 게임 시간 (초)
+
+    
 };

@@ -18,7 +18,7 @@ public:
 	virtual void UpdateNetPlayerStateList() override;
 
 protected:
-	virtual void OnRep_CurrentPlayer() override;
+	virtual void OnRep_CurrentPlayerList() override;
 
 private:
 	void UpdateLobbyUI();

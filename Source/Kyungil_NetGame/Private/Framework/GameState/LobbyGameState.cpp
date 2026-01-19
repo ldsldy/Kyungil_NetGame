@@ -9,15 +9,16 @@ void ALobbyGameState::UpdateNetPlayerStateList()
 {
 	Super::UpdateNetPlayerStateList();
 
+    // 서버에서만 UI 업데이트 호출
 	if (HasAuthority())
 	{
 		UpdateLobbyUI();
 	}
 }
 
-void ALobbyGameState::OnRep_CurrentPlayer()
+void ALobbyGameState::OnRep_CurrentPlayerList()
 {
-	Super::OnRep_CurrentPlayer();
+	Super::OnRep_CurrentPlayerList();
 
 	UpdateLobbyUI();
 }
@@ -26,10 +27,10 @@ void ALobbyGameState::UpdateLobbyUI()
 {
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
-	UE_LOG(LogTemp, Warning, TEXT("ALobbyGameState::UpdateLobbyUI Called"));
-
 	if (!PC) return;
 	if (!PC->GetHUD<ANetHudBase>()) return;
+
+    UE_LOG(LogTemp, Warning, TEXT("ALobbyGameState::UpdateLobbyUI Called"));
 
 	ULobbyUI* LobbyUI = Cast<ULobbyUI>(PC->GetHUD<ANetHudBase>()->GetHudWidget());
 	if (LobbyUI)

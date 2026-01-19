@@ -32,10 +32,10 @@ public:
 
 protected:
 	UFUNCTION()
-	virtual void OnRep_CurrentPlayer();
+	virtual void OnRep_CurrentPlayerList();
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NetGameStateBase", ReplicatedUsing = OnRep_CurrentPlayer)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NetGameStateBase", ReplicatedUsing = OnRep_CurrentPlayerList)
 	TArray<APlayerState*> NetPlayerStateList;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NetGameStateBase", Replicated)

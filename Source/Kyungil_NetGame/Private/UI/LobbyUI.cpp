@@ -24,8 +24,11 @@ void ULobbyUI::NativeConstruct()
 	}
 
 	UpdateMaxPlayerCount(PC->GetWorld()->GetGameState<ANetGameStateBase>()->GetMaxPlayerCount());
+    UpdatePlayerList();
 }
 
+
+// 순환 참조 위험, 파라미터로 넘겨주는 방법 고려
 void ULobbyUI::UpdatePlayerList()
 {
 	PlayerListScrollBox->ClearChildren();
@@ -36,6 +39,7 @@ void ULobbyUI::UpdatePlayerList()
 
 	for (APlayerState* PlayerState : GameState->PlayerArray)
 	{
+        UE_LOG(LogTemp, Warning, TEXT("Player Name : %s"), *PlayerState->GetPlayerName());
 		UPlayerListItemWidget* PlayerListItem = CreateWidget<UPlayerListItemWidget>(GetOwningPlayer(), PlayerListItemClass);
 		PlayerListItem->SetPlayerNameText(PlayerState->GetPlayerName());
 		PlayerListScrollBox->AddChild(PlayerListItem);

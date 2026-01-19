@@ -22,7 +22,7 @@ void ANetGameStateBase::UpdateNetPlayerStateList()
 	NetPlayerStateList = PlayerArray;
 }
 
-void ANetGameStateBase::OnRep_CurrentPlayer()
+void ANetGameStateBase::OnRep_CurrentPlayerList()
 {
 
 }

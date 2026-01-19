@@ -7,5 +7,7 @@
 UENUM(BlueprintType)
 enum class ENetGameLevelType : uint8
 {
+	Menu		UMETA(DisplayName = "Menu"),
+	Lobby		UMETA(DisplayName = "Lobby"),
 	GamePlay01	UMETA(DisplayName = "GamePlay"),
 };

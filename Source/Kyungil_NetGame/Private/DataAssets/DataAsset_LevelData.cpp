@@ -3,28 +3,16 @@
 
 #include "DataAssets/DataAsset_LevelData.h"
 
-UWorld* UDataAsset_LevelData::GetGameLevelWorldByType(ENetGameLevelType InLevelType) const
+int32 UDataAsset_LevelData::GetMaxPlayerByType(ENetGameLevelType InLevelType) const
 {
 	for (const FGameLevelConfig& LevelConfig : GameLevelDataArray)
 	{
-		if(LevelConfig.IsValid() && LevelConfig.LevelType == InLevelType)
-		{
-			return LevelConfig.LevelWorld.LoadSynchronous();
-		}
-	}
-	return nullptr;
-}
-
-int32 UDataAsset_LevelData::GetMaxPlayersByType(ENetGameLevelType InLevelType) const
-{
-	for(const FGameLevelConfig& LevelConfig : GameLevelDataArray)
-	{
-		if(LevelConfig.IsValid() && LevelConfig.LevelType == InLevelType)
+		if (LevelConfig.IsValid() && LevelConfig.LevelType == InLevelType)
 		{
 			return LevelConfig.MaxPlayers;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 FString UDataAsset_LevelData::GetGameLevelLongNameByType(ENetGameLevelType InLevelType) const
@@ -33,6 +21,7 @@ FString UDataAsset_LevelData::GetGameLevelLongNameByType(ENetGameLevelType InLev
 	{
 		if (LevelConfig.IsValid() && LevelConfig.LevelType == InLevelType)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Level Long Name : %s"), *LevelConfig.LevelWorld.GetLongPackageName());
 			return LevelConfig.LevelWorld.GetLongPackageName();
 		}
 	}

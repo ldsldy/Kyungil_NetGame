@@ -25,7 +25,7 @@ public:
 
 	bool IsValid() const
 	{
-		return LevelWorld != nullptr;
+		return !LevelWorld.IsNull();
 	}
 };
 
@@ -39,18 +39,11 @@ class KYUNGIL_NETGAME_API UDataAsset_LevelData : public UDataAsset
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
-	TSoftObjectPtr<UWorld> MainMenuLevelData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
-	TSoftObjectPtr<UWorld> LobbyLevelData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level")
 	TArray<FGameLevelConfig> GameLevelDataArray;
 
 public:
-	UWorld* GetGameLevelWorldByType(ENetGameLevelType InLevelType) const;
-
-	int32 GetMaxPlayersByType(ENetGameLevelType InLevelType) const;
+	UFUNCTION(BlueprintCallable, Category = "Level")
+	int32 GetMaxPlayerByType(ENetGameLevelType InLevelType) const;
 
 	FString GetGameLevelLongNameByType(ENetGameLevelType InLevelType) const;
 };

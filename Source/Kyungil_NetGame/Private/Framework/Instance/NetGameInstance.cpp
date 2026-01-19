@@ -16,7 +16,7 @@ void UNetGameInstance::Init()
 	}
 }
 
-void UNetGameInstance::CreateLobbyServer(ENetGameLevelType InLevelType)
+void UNetGameInstance::CreateLobbyServer(ENetGameLevelType InLevelTypeForPlayerCount)
 {
 	checkf(!LevelDataAsset.IsNull(), TEXT("LevelDataAsset is nullptr"));
 
@@ -27,10 +27,12 @@ void UNetGameInstance::CreateLobbyServer(ENetGameLevelType InLevelType)
 	checkf(Asset, TEXT("LevelDataAsset is nullptr"));
 
 	// 로비 최대 인원은 시작하고자 하는 레벨의 최대 인원으로 설정
-	FString MapPath = Asset->LobbyLevelData.GetLongPackageName();
+	FString MapPath = Asset->GetGameLevelLongNameByType(ENetGameLevelType::Lobby);
 	FString Options = FString::Printf(TEXT("listen?maxplayers=%d"),
-		Asset->GetMaxPlayersByType(InLevelType)
+		Asset->GetMaxPlayerByType(InLevelTypeForPlayerCount)
 	);
+
+	UE_LOG(LogTemp, Warning, TEXT("CreateLobbyServer MapPath : %s"), *MapPath);
 
 	UGameplayStatics::OpenLevel(World, FName(*MapPath), true, Options);
 
@@ -54,7 +56,7 @@ void UNetGameInstance::CreateGameServer(ENetGameLevelType InLevelType)
 	// 로비 인원을 데리고 게임 플레이 레벨로 이동
 	FString TravelURL = FString::Printf(TEXT("%s?listen?maxplayers=%d"),
 		*Asset->GetGameLevelLongNameByType(InLevelType),
-		Asset->GetMaxPlayersByType(InLevelType)
+		Asset->GetMaxPlayerByType(InLevelType)
 	);
 
 	World->ServerTravel(TravelURL);
@@ -102,7 +104,7 @@ void UNetGameInstance::DisconnectServer()
 	checkf(Asset, TEXT("LevelDataAsset is nullptr"));
 
 	// 레벨 에셋으로 메인 메뉴 디오
-	PC->ClientTravel(Asset->LobbyLevelData.GetLongPackageName(), ETravelType::TRAVEL_Absolute);
+	PC->ClientTravel(Asset->GetGameLevelLongNameByType(ENetGameLevelType::Menu), ETravelType::TRAVEL_Absolute);
 
 	if (GEngine)
 	{

@@ -22,7 +22,7 @@ public:
 
 	// 로비 서버 생성
 	UFUNCTION(BlueprintCallable, Category = "Network")
-	void CreateLobbyServer(ENetGameLevelType InLevelType);
+	void CreateLobbyServer(ENetGameLevelType InLevelTypeForPlayerCount);
 
 	// 게임 서버 생성
 	UFUNCTION(BlueprintCallable, Category = "Network")

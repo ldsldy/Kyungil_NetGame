@@ -5,6 +5,7 @@
 #include "Framework/GameMode/NetGameModeBase.h"
 #include "Net/UnrealNetwork.h"
 
+
 void ANetGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

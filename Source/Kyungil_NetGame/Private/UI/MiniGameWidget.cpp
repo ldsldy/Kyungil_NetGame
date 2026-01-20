@@ -75,6 +75,9 @@ void UMiniGameWidget::UpdatePlayerListBox()
 
             AMiniGamePlayerState* MiniGamePlayerState = Cast<AMiniGamePlayerState>(PlayerState);
             PlayerScoreWidgets.Add(MiniGamePlayerState, PlayerListItem);
+
+            MiniGamePlayerState->OnPlayerScoreChanged.RemoveDynamic(this, &UMiniGameWidget::UpdatePlayerScore);
+            MiniGamePlayerState->OnPlayerScoreChanged.AddUniqueDynamic(this, &UMiniGameWidget::UpdatePlayerScore);
         }
     }
 }
@@ -87,13 +90,6 @@ void UMiniGameWidget::UpdateStartDelayTimer(float RemainingDelayTime)
 void UMiniGameWidget::OnGameStarted()
 {
     UE_LOG(LogTemp, Warning, TEXT("OnGameStarted"));
-
-    APlayerController* PC = GetOwningPlayer();
-    CachedPlayerState = PC->GetPlayerState<AMiniGamePlayerState>();
-    if (CachedPlayerState.IsValid())
-    {
-        CachedPlayerState->OnPlayerScoreChanged.AddUniqueDynamic(this, &UMiniGameWidget::UpdatePlayerScore);
-    }
 
     StartDelayTimerText->SetVisibility(ESlateVisibility::Collapsed);
 }

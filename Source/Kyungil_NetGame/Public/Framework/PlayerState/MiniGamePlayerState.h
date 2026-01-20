@@ -18,14 +18,14 @@ class KYUNGIL_NETGAME_API AMiniGamePlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    AMiniGamePlayerState();
 
-    UFUNCTION(BlueprintCallable)
-    void AddGameScore(int32 ScoreToAdd);
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     UFUNCTION(BlueprintCallable, Category = "MiniGamePlayerState")
     FORCEINLINE int32 GetGameScore() const { return GameScore; }
 
+    void AddGameScore_Internal(int32 ScoreToAdd);
 protected:
     virtual void BeginPlay() override;
 
@@ -35,8 +35,6 @@ protected:
     UFUNCTION()
     virtual void OnRep_OutCome();
 
-    UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-    void Multicast_AddGameScore(int32 ScoreToAdd);
 public:
     FOnPlayerScoreChanged OnPlayerScoreChanged;
     FOnGameOutComeChanged OnGameOutComeChanged;

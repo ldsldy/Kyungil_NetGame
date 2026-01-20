@@ -13,7 +13,8 @@ void AMiniGamePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AMiniGamePlayerState, GameScore);
-    DOREPLIFETIME(AMiniGamePlayerState, OutCome);
+    DOREPLIFETIME(AMiniGamePlayerState, GameResult);
+    DOREPLIFETIME(AMiniGamePlayerState, Rank);
 }
 
 void AMiniGamePlayerState::BeginPlay()
@@ -26,22 +27,29 @@ void AMiniGamePlayerState::OnRep_GameScore()
 {
     if (OnPlayerScoreChanged.IsBound())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[CLIENT] OnRep_GameScore: %d"), GameScore);
         OnPlayerScoreChanged.Broadcast(this);
     }
 }
 
 void AMiniGamePlayerState::AddGameScore_Internal(int32 ScoreToAdd)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[SERVER] AddScore: %d -> %d"), GameScore, GameScore + ScoreToAdd);
     GameScore += ScoreToAdd;
     OnRep_GameScore();
 }
 
-void AMiniGamePlayerState::OnRep_OutCome()
+void AMiniGamePlayerState::SetGameResult(EMiniGameOutcome NewResult)
 {
-    if (OnGameOutComeChanged.IsBound())
+    if (HasAuthority())
     {
-        OnGameOutComeChanged.Broadcast(OutCome);
+        GameResult = NewResult;
+        OnRep_GameResult();
+    }
+}
+
+void AMiniGamePlayerState::OnRep_GameResult()
+{
+    if (OnGameResultChanged.IsBound())
+    {
+        OnGameResultChanged.Broadcast(this);
     }
 }

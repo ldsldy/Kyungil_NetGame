@@ -76,6 +76,8 @@ void UMiniGameWidget::UpdatePlayerListBox()
             AMiniGamePlayerState* MiniGamePlayerState = Cast<AMiniGamePlayerState>(PlayerState);
             PlayerScoreWidgets.Add(MiniGamePlayerState, PlayerListItem);
 
+            // 점수 변경 델리게이트 바인딩
+            // 만약 랭킹 시스템이 추가되면 여기에 추가
             MiniGamePlayerState->OnPlayerScoreChanged.RemoveDynamic(this, &UMiniGameWidget::UpdatePlayerScore);
             MiniGamePlayerState->OnPlayerScoreChanged.AddUniqueDynamic(this, &UMiniGameWidget::UpdatePlayerScore);
         }
@@ -89,9 +91,16 @@ void UMiniGameWidget::UpdateStartDelayTimer(float RemainingDelayTime)
 
 void UMiniGameWidget::OnGameStarted()
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnGameStarted"));
+    APlayerController* PC = GetOwningPlayer();
 
     StartDelayTimerText->SetVisibility(ESlateVisibility::Collapsed);
+
+    // 타이밍을 위한 늦은 바인딩(게임 플레이어 스테이트와의 바인딩이 많아지면 함수로 분리)
+    AMiniGamePlayerState* MiniGamePlayerState = PC->GetPlayerState<AMiniGamePlayerState>();
+    if (MiniGamePlayerState)
+    {
+        MiniGamePlayerState->OnGameResultChanged.AddUniqueDynamic(this, &UMiniGameWidget::SetGameOutcomeText);
+    }
 }
 
 void UMiniGameWidget::UpdateTimerText(float RemainingTime)
@@ -107,10 +116,12 @@ void UMiniGameWidget::UpdateTimerText(float RemainingTime)
     }
 }
 
-void UMiniGameWidget::SetGameOutcomeText(EMiniGameOutcome Outcome)
+void UMiniGameWidget::SetGameOutcomeText(AMiniGamePlayerState* InPlayerState)
 {
     if (OutComeText)
     {
+        UE_LOG(LogTemp, Warning, TEXT("SetGameOutcomeText called."));
+        EMiniGameOutcome Outcome = InPlayerState->GetGameResult();
         FString OutcomeString;
         switch (Outcome)
         {
@@ -134,8 +145,6 @@ void UMiniGameWidget::SetGameOutcomeText(EMiniGameOutcome Outcome)
 
 void UMiniGameWidget::UpdatePlayerScore(AMiniGamePlayerState* InPlayerState)
 {
-    UE_LOG(LogTemp, Warning, TEXT("UMiniGameWidget::UpdatePlayerScore called for PlayerState: %s"), *InPlayerState->GetPlayerName());
-
     if (PlayerScoreWidgets.IsEmpty()) return;
 
     UPlayerScoreItemWidget* FoundWidget = PlayerScoreWidgets.FindRef(InPlayerState);
@@ -143,10 +152,5 @@ void UMiniGameWidget::UpdatePlayerScore(AMiniGamePlayerState* InPlayerState)
     {
         FoundWidget->SetPlayerScore(InPlayerState->GetGameScore());
     }
-}
-
-void UMiniGameWidget::TryBindFromPlayerState()
-{
-
 }
 

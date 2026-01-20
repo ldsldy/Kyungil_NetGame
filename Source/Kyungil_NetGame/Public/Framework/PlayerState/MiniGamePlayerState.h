@@ -8,7 +8,7 @@
 #include "MiniGamePlayerState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerScoreChanged, AMiniGamePlayerState*, InPlayerState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameOutComeChanged, EMiniGameOutcome, NewOutcome);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameResultChanged, AMiniGamePlayerState*, InPlayerState);
 /**
  * 
  */
@@ -25,7 +25,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "MiniGamePlayerState")
     FORCEINLINE int32 GetGameScore() const { return GameScore; }
 
+    UFUNCTION(BlueprintCallable, Category = "MiniGamePlayerState")
+    FORCEINLINE EMiniGameOutcome GetGameResult() const { return GameResult; }
+
     void AddGameScore_Internal(int32 ScoreToAdd);
+
+    void SetGameResult(EMiniGameOutcome NewResult);
+    void SetRank(int32 NewRank) { Rank = NewRank; }
 protected:
     virtual void BeginPlay() override;
 
@@ -33,16 +39,19 @@ protected:
     virtual void OnRep_GameScore();
 
     UFUNCTION()
-    virtual void OnRep_OutCome();
+    virtual void OnRep_GameResult();
 
 public:
     FOnPlayerScoreChanged OnPlayerScoreChanged;
-    FOnGameOutComeChanged OnGameOutComeChanged;
+    FOnGameResultChanged OnGameResultChanged;
 
 protected:
     UPROPERTY(ReplicatedUsing = OnRep_GameScore)
     int32 GameScore = 0;
 
-    UPROPERTY(ReplicatedUsing = OnRep_OutCome)
-    EMiniGameOutcome OutCome = EMiniGameOutcome::None;
+    UPROPERTY(ReplicatedUsing = OnRep_GameResult)
+    EMiniGameOutcome GameResult = EMiniGameOutcome::None;
+
+    UPROPERTY(Replicated)
+    int32 Rank = -1;
 };

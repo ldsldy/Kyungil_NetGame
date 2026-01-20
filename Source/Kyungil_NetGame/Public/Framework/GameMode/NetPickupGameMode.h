@@ -17,10 +17,9 @@ class KYUNGIL_NETGAME_API ANetPickupGameMode : public ANetGameModeBase
 public:
     FORCEINLINE float GetGameDuration() const { return GameDuration; }
 
+    void EndMiniGame();
+
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameMode")
     float GameDuration = 60.f; // 게임 시간 (초)
-
-
-    
 };

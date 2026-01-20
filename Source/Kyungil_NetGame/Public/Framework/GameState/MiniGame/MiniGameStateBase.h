@@ -9,7 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStartDelayTimeUpdated, float, NewStartDelayTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameTimeUpdated, float, NewRemainTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStart);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeOver);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameEnd);
 /**
  * 
  */
@@ -27,16 +27,10 @@ public:
 
     FORCEINLINE float GetRemainTime() { return RemainTime; }
 
-    UFUNCTION(BlueprintCallable, Category = "GameMode")
-    void DetermineGameWinner();
-
 protected:
     virtual void BeginPlay() override;
 
     virtual void Tick(float DeltaSeconds) override;
-
-    UFUNCTION()
-    void OnRep_Winner();
 
     UFUNCTION()
     void OnRep_RemainTime();
@@ -48,15 +42,16 @@ private:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_GameStarted();
 
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_TimeOver();
+
 public:
     FOnMiniGameTimeUpdated OnMiniGameTimeUpdated;
     FOnStartDelayTimeUpdated OnStartDelayTimeUpdated;
-    FOnTimeOver OnTimerOver;
+    FOnGameEnd OnGameEnd;
     FOnGameStart OnGameStart;
-protected:
-    UPROPERTY(ReplicatedUsing = OnRep_Winner)
-    TWeakObjectPtr<APlayerState> Winner;
 
+protected:
     UPROPERTY(ReplicatedUsing = OnRep_RemainTime)
     float RemainTime = 0.0f;
 

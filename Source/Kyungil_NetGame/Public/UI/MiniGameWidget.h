@@ -39,7 +39,7 @@ protected:
     void UpdateTimerText(float RemainingTime);
     
     UFUNCTION()
-    void SetGameOutcomeText(EMiniGameOutcome Outcome);
+    void SetGameOutcomeText(AMiniGamePlayerState* InPlayerState);
   
     UFUNCTION()
     void UpdatePlayerListBox();
@@ -53,8 +53,6 @@ protected:
     UFUNCTION()
     void OnGameStarted();
 
-private:
-    void TryBindFromPlayerState();
 protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> TimerText;

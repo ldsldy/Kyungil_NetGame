@@ -15,7 +15,6 @@ AMiniGameStateBase::AMiniGameStateBase()
 void AMiniGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AMiniGameStateBase, Winner);
     DOREPLIFETIME(AMiniGameStateBase, RemainTime);
     DOREPLIFETIME(AMiniGameStateBase, StartDelayTime);
 }
@@ -45,6 +44,7 @@ void AMiniGameStateBase::Tick(float DeltaSeconds)
 
     if (HasAuthority())
     {
+        // 시작 딜레이 타이머 처리
         if(StartDelayTime > 0.f)
         {
             StartDelayTime -= DeltaSeconds;
@@ -59,39 +59,21 @@ void AMiniGameStateBase::Tick(float DeltaSeconds)
             return;
         }
 
-
+        // 게임 타이머 처리
         RemainTime -= DeltaSeconds;
         if (OnMiniGameTimeUpdated.IsBound())
         {
             OnMiniGameTimeUpdated.Broadcast(RemainTime);
         }
 
+        // 타임 오버 처리
         if (RemainTime <= 0)
         {
-            if (OnTimerOver.IsBound())
-            {
-                OnTimerOver.Broadcast();
-            }
-            // 틱 종료
+            RemainTime = 0.0f;
+            ANetPickupGameMode* GameMode = GetWorld()->GetAuthGameMode<ANetPickupGameMode>();
+            GameMode->EndMiniGame();
             PrimaryActorTick.SetTickFunctionEnable(false);
-        }
-    }
-}
-
-void AMiniGameStateBase::DetermineGameWinner()
-{
-    if(HasAuthority() == false)  return;
-       
-    APlayerState* BestPlayerState = nullptr;
-    int32 TopScore = -1;
-    
-    for (APlayerState* NetPlayerState : PlayerArray)
-    {
-        AMiniGamePlayerState* MiniPlayerState = Cast<AMiniGamePlayerState>(NetPlayerState);
-        if (MiniPlayerState && MiniPlayerState->GetGameScore() > TopScore)
-        {
-            TopScore = MiniPlayerState->GetGameScore();
-            BestPlayerState = MiniPlayerState;
+            //Multicast_TimeOver();
         }
     }
 }
@@ -112,6 +94,16 @@ void AMiniGameStateBase::OnRep_StartDelayTime()
     }
 }
 
+void AMiniGameStateBase::Multicast_TimeOver_Implementation()
+{
+    if (OnGameEnd.IsBound())
+    {
+        OnGameEnd.Broadcast();
+        // 틱 종료
+        PrimaryActorTick.SetTickFunctionEnable(false);
+    }
+}
+
 void AMiniGameStateBase::Multicast_GameStarted_Implementation()
 {
     if (OnGameStart.IsBound())
@@ -119,15 +111,3 @@ void AMiniGameStateBase::Multicast_GameStarted_Implementation()
         OnGameStart.Broadcast();
     }
 }
-
-void AMiniGameStateBase::OnRep_Winner()
-{
-    if (OnTimerOver.IsBound())
-    {
-        OnTimerOver.Broadcast();
-
-        // 틱 종료
-        PrimaryActorTick.SetTickFunctionEnable(false);
-    }
-}
-

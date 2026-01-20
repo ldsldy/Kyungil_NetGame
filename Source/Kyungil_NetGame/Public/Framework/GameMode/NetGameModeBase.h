@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "NetGameModeBase.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerListUpdated);
+
 /**
  * 
  */
@@ -19,10 +21,12 @@ public:
 	virtual void Logout(AController* Exiting) override;
 	
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
-	virtual void InitGameState() override;
 
 	void UpdatePlayerList();
 	int32 GetMaxPlayers() const;
+
+public:
+    FOnPlayerListUpdated OnPlayerListUpdated;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NetGameModeBase")

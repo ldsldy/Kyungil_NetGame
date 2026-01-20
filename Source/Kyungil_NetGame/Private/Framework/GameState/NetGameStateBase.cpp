@@ -2,12 +2,8 @@
 
 
 #include "Framework/GameState/NetGameStateBase.h"
+#include "Framework/GameMode/NetGameModeBase.h"
 #include "Net/UnrealNetwork.h"
-
-ANetGameStateBase::ANetGameStateBase()
-{
-
-}
 
 void ANetGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -17,14 +13,55 @@ void ANetGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ANetGameStateBase, MaxPlayerCount);
 }
 
+void ANetGameStateBase::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (HasAuthority())
+    {
+        ANetGameModeBase* NetGameMode = GetWorld()->GetAuthGameMode<ANetGameModeBase>();
+        if (NetGameMode)
+        {
+            MaxPlayerCount = NetGameMode->GetMaxPlayers();
+
+            NetGameMode->OnPlayerListUpdated.AddUniqueDynamic(this, &ANetGameStateBase::UpdateNetPlayerStateList);
+            UpdateNetPlayerStateList();
+        }
+    }
+}
+
+void ANetGameStateBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (HasAuthority())
+    {
+        ANetGameModeBase* NetGameMode = GetWorld()->GetAuthGameMode<ANetGameModeBase>();
+        if (NetGameMode)
+        {
+            NetGameMode->OnPlayerListUpdated.RemoveDynamic(this, &ANetGameStateBase::UpdateNetPlayerStateList);
+        }
+    }
+    Super::EndPlay(EndPlayReason);
+}
+
 void ANetGameStateBase::UpdateNetPlayerStateList()
 {
-	NetPlayerStateList = PlayerArray;
+    if (HasAuthority())
+    {
+        NetPlayerStateList = PlayerArray;
+
+        if (OnGameStatePlayerListChanged.IsBound())
+        {
+            OnGameStatePlayerListChanged.Broadcast();
+        }
+    }
 }
 
 void ANetGameStateBase::OnRep_CurrentPlayerList()
 {
-
+    if (OnGameStatePlayerListChanged.IsBound())
+    {
+        OnGameStatePlayerListChanged.Broadcast();
+    }
 }
 
 int32 ANetGameStateBase::GetCurrentPlayerCount() const

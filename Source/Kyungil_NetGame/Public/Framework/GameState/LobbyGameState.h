@@ -14,12 +14,4 @@ class KYUNGIL_NETGAME_API ALobbyGameState : public ANetGameStateBase
 {
 	GENERATED_BODY()
 	
-public:
-	virtual void UpdateNetPlayerStateList() override;
-
-protected:
-	virtual void OnRep_CurrentPlayerList() override;
-
-private:
-	void UpdateLobbyUI();
 };

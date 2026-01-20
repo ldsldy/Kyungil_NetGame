@@ -11,16 +11,17 @@ class UTextBlock;
 class UScrollBox;
 class AMiniGamePlayerState;
 class UPlayerScoreItemWidget;
+class AMiniGamePlayerState;
 
-USTRUCT(BlueprintType)
-struct FPlayerScoreItem
-{
-    GENERATED_BODY()
-
-public:
-    const AMiniGamePlayerState* PlayerState;
-    UPlayerScoreItemWidget* ScoreItemWidget;
-};
+//USTRUCT(BlueprintType)
+//struct FPlayerScoreItem
+//{
+//    GENERATED_BODY()
+//
+//public:
+//    int32 PlayerId;
+//    UPlayerScoreItemWidget* ScoreItemWidget;
+//};
 
 /**
  * 
@@ -30,15 +31,30 @@ class KYUNGIL_NETGAME_API UMiniGameWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
-    void UpdateTimerText(int32 RemainingTime);
-    void SetGameOutcomeText(EMiniGameOutcome Outcome);
-    void AddPlayerScoreItem(const AMiniGamePlayerState* InPlayerState, int32 Score);
-    void UpdatePlayerScore(const AMiniGamePlayerState* InPlayerState, int32 NewScore);
-
 protected:
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
 
+    UFUNCTION()
+    void UpdateTimerText(float RemainingTime);
+    
+    UFUNCTION()
+    void SetGameOutcomeText(EMiniGameOutcome Outcome);
+  
+    UFUNCTION()
+    void UpdatePlayerListBox();
+    
+    UFUNCTION()
+    void UpdatePlayerScore(AMiniGamePlayerState* InPlayerState);
+
+    UFUNCTION()
+    void UpdateStartDelayTimer(float RemainingDelayTime);
+
+    UFUNCTION()
+    void OnGameStarted();
+
+private:
+    void TryBindFromPlayerState();
 protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> TimerText;
@@ -47,11 +63,16 @@ protected:
     TObjectPtr<UTextBlock> OutComeText;
 
     UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> StartDelayTimerText;
+
+    UPROPERTY(meta = (BindWidget))
     TObjectPtr<UScrollBox> PlayerScoreList;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UPlayerScoreItemWidget> PlayerScoreItemClass;
 
 private:
-    TArray<FPlayerScoreItem> PlayerScores;
+    TMap<AMiniGamePlayerState*, UPlayerScoreItemWidget*> PlayerScoreWidgets;
+
+    TWeakObjectPtr<AMiniGamePlayerState> CachedPlayerState;
 };

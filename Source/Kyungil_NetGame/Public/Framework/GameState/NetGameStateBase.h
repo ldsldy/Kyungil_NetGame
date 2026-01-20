@@ -6,6 +6,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "NetGameStateBase.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStatePlayerListChanged);
 /**
  * 
  */
@@ -15,8 +16,6 @@ class KYUNGIL_NETGAME_API ANetGameStateBase : public AGameStateBase
 	GENERATED_BODY()
 	
 public:
-	ANetGameStateBase();
-
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	UFUNCTION(BlueprintCallable, Category = "NetGameStateBase")
@@ -25,14 +24,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "NetGameStateBase")
 	int32 GetMaxPlayerCount() const;
 
-	UFUNCTION(BlueprintCallable, Category = "NetGameStateBase")
-	FORCEINLINE void SetMaxPlayerCount(int32 InMaxPlayerCount) { MaxPlayerCount = InMaxPlayerCount; }
-
-	virtual void UpdateNetPlayerStateList();
-
 protected:
+    virtual void BeginPlay() override;
+
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+    UFUNCTION()
+    virtual void UpdateNetPlayerStateList();
+
+
 	UFUNCTION()
 	virtual void OnRep_CurrentPlayerList();
+
+public:
+    FOnGameStatePlayerListChanged OnGameStatePlayerListChanged;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NetGameStateBase", ReplicatedUsing = OnRep_CurrentPlayerList)

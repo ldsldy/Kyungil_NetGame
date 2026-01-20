@@ -3,8 +3,9 @@
 
 #include "Framework/GameMode/NetGameModeBase.h"
 #include "GameFramework/GameSession.h"
-#include "Framework/GameState/NetGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
+
+//#include "Framework/GameState/NetGameStateBase.h"
 
 void ANetGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
@@ -12,7 +13,10 @@ void ANetGameModeBase::PostLogin(APlayerController* NewPlayer)
 
 	NetLoginPlayerList.Add(NewPlayer);
 
-	UpdatePlayerList();
+    if (OnPlayerListUpdated.IsBound())
+    {
+        OnPlayerListUpdated.Broadcast();
+    }
 }
 
 void ANetGameModeBase::Logout(AController* Exiting)
@@ -24,21 +28,11 @@ void ANetGameModeBase::Logout(AController* Exiting)
 	{
 		NetLoginPlayerList.Remove(ExitingPC);
 
-		UpdatePlayerList();
+        if (OnPlayerListUpdated.IsBound())
+        {
+            OnPlayerListUpdated.Broadcast();
+        }
 	}
-}
-
-void ANetGameModeBase::UpdatePlayerList()
-{
-	ANetGameStateBase* NetGameState = GetGameState<ANetGameStateBase>();
-	if (!NetGameState) return;
-
-	NetGameState->UpdateNetPlayerStateList();
-}
-
-int32 ANetGameModeBase::GetMaxPlayers() const
-{
-	return GameSession->MaxPlayers;
 }
 
 void ANetGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -52,14 +46,7 @@ void ANetGameModeBase::InitGame(const FString& MapName, const FString& Options, 
 	}
 }
 
-void ANetGameModeBase::InitGameState()
+int32 ANetGameModeBase::GetMaxPlayers() const
 {
-	Super::InitGameState();
-
-	// 게임 모드가 시작될 때 최대 플레이어 수를 게임 상태에 설정
-	ANetGameStateBase* NetGameState = GetGameState<ANetGameStateBase>();
-	if (NetGameState)
-	{
-		NetGameState->SetMaxPlayerCount(GetMaxPlayers());
-	}
+    return GameSession->MaxPlayers;
 }

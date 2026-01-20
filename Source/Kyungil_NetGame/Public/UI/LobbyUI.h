@@ -19,13 +19,16 @@ class KYUNGIL_NETGAME_API ULobbyUI : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "LobbyUI")
-	void UpdatePlayerList();
-
-	UFUNCTION(BlueprintCallable, Category = "LobbyUI")
 	void UpdateMaxPlayerCount(int32 MaxPlayerCount);
 
 protected:
 	virtual void NativeConstruct() override;
+
+    virtual void NativeDestruct() override;
+
+    UFUNCTION(BlueprintCallable, Category = "LobbyUI")
+    void UpdatePlayerList();
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

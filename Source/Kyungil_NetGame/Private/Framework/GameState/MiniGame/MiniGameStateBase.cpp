@@ -3,9 +3,8 @@
 
 #include "Framework/GameState/MiniGame/MiniGameStateBase.h"
 #include "Net/UnrealNetwork.h"
-#include "Framework/Hud/NetHudBase.h"
-#include "UI/MiniGameWidget.h"
 #include "Framework/PlayerState/MiniGamePlayerState.h"
+#include "Framework/GameMode/NetPickupGameMode.h"
 
 AMiniGameStateBase::AMiniGameStateBase()
 {
@@ -18,15 +17,25 @@ void AMiniGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AMiniGameStateBase, Winner);
     DOREPLIFETIME(AMiniGameStateBase, RemainTime);
+    DOREPLIFETIME(AMiniGameStateBase, StartDelayTime);
 }
 
-void AMiniGameStateBase::UpdateNetPlayerStateList()
+void AMiniGameStateBase::BeginPlay()
 {
-    Super::UpdateNetPlayerStateList();
+    Super::BeginPlay();
 
     if (HasAuthority())
     {
-
+        ANetPickupGameMode* GameMode = GetWorld()->GetAuthGameMode<ANetPickupGameMode>();
+        
+        if (GameMode)
+        {
+            RemainTime = GameMode->GetGameDuration();
+            if (OnMiniGameTimeUpdated.IsBound())
+            {
+                OnMiniGameTimeUpdated.Broadcast(RemainTime);
+            }
+        }
     }
 }
 
@@ -34,64 +43,91 @@ void AMiniGameStateBase::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    RemainTime -= DeltaSeconds;
     if (HasAuthority())
     {
-        UpdateTimerUI();
+        if(StartDelayTime > 0.f)
+        {
+            StartDelayTime -= DeltaSeconds;
+            if(OnStartDelayTimeUpdated.IsBound())
+            {
+                OnStartDelayTimeUpdated.Broadcast(StartDelayTime);
+            }
+            if(StartDelayTime <= 0.f)
+            {
+                Multicast_GameStarted();
+            }
+            return;
+        }
+
+
+        RemainTime -= DeltaSeconds;
+        if (OnMiniGameTimeUpdated.IsBound())
+        {
+            OnMiniGameTimeUpdated.Broadcast(RemainTime);
+        }
+
+        if (RemainTime <= 0)
+        {
+            if (OnTimerOver.IsBound())
+            {
+                OnTimerOver.Broadcast();
+            }
+            // 틱 종료
+            PrimaryActorTick.SetTickFunctionEnable(false);
+        }
     }
 }
 
-void AMiniGameStateBase::OnRep_Winner()
+void AMiniGameStateBase::DetermineGameWinner()
 {
-    if(Winner.IsValid())
+    if(HasAuthority() == false)  return;
+       
+    APlayerState* BestPlayerState = nullptr;
+    int32 TopScore = -1;
+    
+    for (APlayerState* NetPlayerState : PlayerArray)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Winner is %s"), *Winner->GetPlayerName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No winner."));
+        AMiniGamePlayerState* MiniPlayerState = Cast<AMiniGamePlayerState>(NetPlayerState);
+        if (MiniPlayerState && MiniPlayerState->GetGameScore() > TopScore)
+        {
+            TopScore = MiniPlayerState->GetGameScore();
+            BestPlayerState = MiniPlayerState;
+        }
     }
 }
 
 void AMiniGameStateBase::OnRep_RemainTime()
 {
-    UpdateTimerUI();
+    if (OnMiniGameTimeUpdated.IsBound())
+    {
+        OnMiniGameTimeUpdated.Broadcast(RemainTime);
+    }
 }
 
-void AMiniGameStateBase::OnRep_CurrentPlayerList()
+void AMiniGameStateBase::OnRep_StartDelayTime()
 {
-    UpdatePlayerListUI();
+    if(OnStartDelayTimeUpdated.IsBound())
+    {
+        OnStartDelayTimeUpdated.Broadcast(StartDelayTime);
+    }
 }
 
-void AMiniGameStateBase::UpdatePlayerListUI()
+void AMiniGameStateBase::Multicast_GameStarted_Implementation()
 {
-    APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (!PC) return;
-    if (!PC->GetHUD<ANetHudBase>()) return;
-    if (!MiniGameWidget.IsValid())
+    if (OnGameStart.IsBound())
     {
-        MiniGameWidget = Cast<UMiniGameWidget>(PC->GetHUD<ANetHudBase>()->GetHudWidget());
-    }
-    if (MiniGameWidget.IsValid())
-    {
-        AMiniGamePlayerState* MiniPlayerState = PC->GetPlayerState<AMiniGamePlayerState>();
-        MiniGameWidget->AddPlayerScoreItem(MiniPlayerState, 0);
+        OnGameStart.Broadcast();
     }
 }
 
-
-void AMiniGameStateBase::UpdateTimerUI()
+void AMiniGameStateBase::OnRep_Winner()
 {
-    APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (!PC) return;
-    if (!PC->GetHUD<ANetHudBase>()) return;
+    if (OnTimerOver.IsBound())
+    {
+        OnTimerOver.Broadcast();
 
-    if (!MiniGameWidget.IsValid())
-    {
-        MiniGameWidget = Cast<UMiniGameWidget>(PC->GetHUD<ANetHudBase>()->GetHudWidget());
-    }
-    if (MiniGameWidget.IsValid())
-    {
-        MiniGameWidget->UpdateTimerText(RemainTime);
+        // 틱 종료
+        PrimaryActorTick.SetTickFunctionEnable(false);
     }
 }
+

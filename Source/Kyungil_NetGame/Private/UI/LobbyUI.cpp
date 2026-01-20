@@ -5,9 +5,9 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/ScrollBox.h"
+#include "UI/PlayerListItemWidget.h"
 #include "Framework/GameState/NetGameStateBase.h"
 #include "GameFramework/PlayerState.h"
-#include "UI/PlayerListItemWidget.h"
 
 void ULobbyUI::NativeConstruct()
 {
@@ -22,9 +22,27 @@ void ULobbyUI::NativeConstruct()
 	{
 		StartButton->SetVisibility(ESlateVisibility::Collapsed);
 	}
+    
+    // 게임 스테이트의 플레이어 리스트 변경 이벤트에 바인딩
+    ANetGameStateBase* GameState = PC->GetWorld()->GetGameState<ANetGameStateBase>();
+    GameState->OnGameStatePlayerListChanged.AddUniqueDynamic(this, &ULobbyUI::UpdatePlayerList);
 
-	UpdateMaxPlayerCount(PC->GetWorld()->GetGameState<ANetGameStateBase>()->GetMaxPlayerCount());
-    UpdatePlayerList();
+    if (PC->HasAuthority())
+    {
+        UpdatePlayerList();
+    }
+    UpdateMaxPlayerCount(PC->GetWorld()->GetGameState<ANetGameStateBase>()->GetMaxPlayerCount());
+}
+
+void ULobbyUI::NativeDestruct()
+{
+    APlayerController* PC = GetOwningPlayer();
+    ANetGameStateBase* GameState = PC->GetWorld()->GetGameState<ANetGameStateBase>();
+    if (GameState)
+    {
+        GameState->OnGameStatePlayerListChanged.RemoveDynamic(this, &ULobbyUI::UpdatePlayerList);
+    }
+    Super::NativeDestruct();
 }
 
 
@@ -39,9 +57,9 @@ void ULobbyUI::UpdatePlayerList()
 
 	for (APlayerState* PlayerState : GameState->PlayerArray)
 	{
-        UE_LOG(LogTemp, Warning, TEXT("Player Name : %s"), *PlayerState->GetPlayerName());
+        FString PlayerName = PlayerState->GetPlayerName();
 		UPlayerListItemWidget* PlayerListItem = CreateWidget<UPlayerListItemWidget>(GetOwningPlayer(), PlayerListItemClass);
-		PlayerListItem->SetPlayerNameText(PlayerState->GetPlayerName());
+		PlayerListItem->SetPlayerNameText(PlayerName); // 현재 이름 대신 ID 사용, 너무 길어서 대체
 		PlayerListScrollBox->AddChild(PlayerListItem);
 	}
 	CurrentPlayerCountText->SetText(FText::AsNumber(GameState->GetCurrentPlayerCount()));
@@ -49,6 +67,5 @@ void ULobbyUI::UpdatePlayerList()
 
 void ULobbyUI::UpdateMaxPlayerCount(int32 MaxPlayerCount)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Max Player Count : %d"), MaxPlayerCount);
 	MaxPlayerCountText->SetText(FText::AsNumber(MaxPlayerCount));
 }

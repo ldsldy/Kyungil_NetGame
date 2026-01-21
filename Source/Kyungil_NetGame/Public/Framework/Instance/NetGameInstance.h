@@ -43,4 +43,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Network")
 	FString ServerIP;
+
+private:
+    UPROPERTY()
+    TObjectPtr<UDataAsset_LevelData> CachedLevelDataAsset;
 };

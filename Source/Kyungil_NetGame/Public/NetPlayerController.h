@@ -17,7 +17,6 @@ class KYUNGIL_NETGAME_API ANetPlayerController : public APlayerController
 public:
 	ANetPlayerController();
 
-protected:
     UFUNCTION(Server, Reliable, BlueprintCallable)
     void Server_AddGameScore(int32 ScoreToAdd);
 };

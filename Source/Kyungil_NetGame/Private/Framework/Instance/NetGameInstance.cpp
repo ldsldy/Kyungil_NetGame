@@ -10,36 +10,34 @@ void UNetGameInstance::Init()
 {
 	Super::Init();
 
-	if (!LevelDataAsset.IsNull())
+	if (LevelDataAsset.IsNull())
 	{
-		LevelDataAsset.LoadSynchronous();
+        UE_LOG(LogTemp, Error, TEXT("LevelDataAsset is not set!"));
+        return;
 	}
+    CachedLevelDataAsset = LevelDataAsset.LoadSynchronous();
+
 }
 
 void UNetGameInstance::CreateLobbyServer(ENetGameLevelType InLevelTypeForPlayerCount)
 {
-	checkf(!LevelDataAsset.IsNull(), TEXT("LevelDataAsset is nullptr"));
+	checkf(!CachedLevelDataAsset.IsNull(), TEXT("LevelDataAsset is nullptr"));
 
 	UWorld* World = GetWorld();
 	checkf(World, TEXT("World is nullptr"));
 
-	UDataAsset_LevelData* Asset = LevelDataAsset.Get();
-	checkf(Asset, TEXT("LevelDataAsset is nullptr"));
-
 	// 로비 최대 인원은 시작하고자 하는 레벨의 최대 인원으로 설정
-	FString MapPath = Asset->GetGameLevelLongNameByType(ENetGameLevelType::Lobby);
+	FString MapPath = CachedLevelDataAsset->GetGameLevelLongNameByType(ENetGameLevelType::Lobby);
 	FString Options = FString::Printf(TEXT("listen?maxplayers=%d"),
-		Asset->GetMaxPlayerByType(InLevelTypeForPlayerCount)
+        CachedLevelDataAsset->GetMaxPlayerByType(InLevelTypeForPlayerCount)
 	);
-
-	UE_LOG(LogTemp, Warning, TEXT("CreateLobbyServer MapPath : %s"), *MapPath);
 
 	UGameplayStatics::OpenLevel(World, FName(*MapPath), true, Options);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Create Lobby Server : %s"), *MapPath));
-	}
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Green, FString::Printf(TEXT("Create Lobby Server : %s"), *MapPath));
+	//}
 }
 
 void UNetGameInstance::CreateGameServer(ENetGameLevelType InLevelType)
@@ -50,21 +48,18 @@ void UNetGameInstance::CreateGameServer(ENetGameLevelType InLevelType)
 	UWorld* World = GetWorld();
 	checkf(World, TEXT("World is nullptr"));
 
-	UDataAsset_LevelData* Asset = LevelDataAsset.Get();
-	checkf(Asset, TEXT("LevelDataAsset is nullptr"));
-
 	// 로비 인원을 데리고 게임 플레이 레벨로 이동
 	FString TravelURL = FString::Printf(TEXT("%s?listen?maxplayers=%d"),
-		*Asset->GetGameLevelLongNameByType(InLevelType),
-		Asset->GetMaxPlayerByType(InLevelType)
+		*CachedLevelDataAsset->GetGameLevelLongNameByType(InLevelType),
+        CachedLevelDataAsset->GetMaxPlayerByType(InLevelType)
 	);
 
 	World->ServerTravel(TravelURL);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Create Game Server : %s"), *TravelURL));
-	}
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Create Game Server : %s"), *TravelURL));
+	//}
 }
 
 void UNetGameInstance::JoinServer(FString& IPAddress)
@@ -83,10 +78,10 @@ void UNetGameInstance::JoinServer(FString& IPAddress)
 	//주소로 서버 접속
 	PC->ClientTravel(IPAddress, ETravelType::TRAVEL_Absolute);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Join Server : %s"), *IPAddress));
-	}
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Join Server : %s"), *IPAddress));
+	//}
 }
 
 void UNetGameInstance::DisconnectServer()
@@ -100,14 +95,11 @@ void UNetGameInstance::DisconnectServer()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
 	checkf(PC, TEXT("Player Controller is nullptr"));
 
-	UDataAsset_LevelData* Asset = LevelDataAsset.Get();
-	checkf(Asset, TEXT("LevelDataAsset is nullptr"));
-
 	// 레벨 에셋으로 메인 메뉴 디오
-	PC->ClientTravel(Asset->GetGameLevelLongNameByType(ENetGameLevelType::Menu), ETravelType::TRAVEL_Absolute);
+	PC->ClientTravel(CachedLevelDataAsset->GetGameLevelLongNameByType(ENetGameLevelType::Menu), ETravelType::TRAVEL_Absolute);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, TEXT("서버 접속 종료"));
-	}
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, TEXT("서버 접속 종료"));
+	//}
 }

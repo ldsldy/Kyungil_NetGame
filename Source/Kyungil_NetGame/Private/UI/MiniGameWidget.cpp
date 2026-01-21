@@ -120,7 +120,6 @@ void UMiniGameWidget::SetGameOutcomeText(AMiniGamePlayerState* InPlayerState)
 {
     if (OutComeText)
     {
-        UE_LOG(LogTemp, Warning, TEXT("SetGameOutcomeText called."));
         EMiniGameOutcome Outcome = InPlayerState->GetGameResult();
         FString OutcomeString;
         switch (Outcome)

@@ -73,7 +73,7 @@ void AMiniGameStateBase::Tick(float DeltaSeconds)
             ANetPickupGameMode* GameMode = GetWorld()->GetAuthGameMode<ANetPickupGameMode>();
             GameMode->EndMiniGame();
             PrimaryActorTick.SetTickFunctionEnable(false);
-            //Multicast_TimeOver();
+            Multicast_TimeOver();
         }
     }
 }

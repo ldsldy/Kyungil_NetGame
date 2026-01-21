@@ -33,8 +33,11 @@ void AMiniGamePlayerState::OnRep_GameScore()
 
 void AMiniGamePlayerState::AddGameScore_Internal(int32 ScoreToAdd)
 {
-    GameScore += ScoreToAdd;
-    OnRep_GameScore();
+    if (HasAuthority())
+    {
+        GameScore += ScoreToAdd;
+        OnRep_GameScore();
+    }
 }
 
 void AMiniGamePlayerState::SetGameResult(EMiniGameOutcome NewResult)
